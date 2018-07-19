@@ -1,0 +1,100 @@
+{% extends 'appbuilder/baselayout.html' %}
+{% import 'appbuilder/baselib.html' as baselib with context %}
+
+
+{% block head_css %}
+    {{ super() }}
+    <!--<link href="{{url_for('static',filename='css/landing-page.css')}}" rel="stylesheet">-->
+    <!--<link href="{{url_for('static',filename='css/bootstrap.min.css')}}" rel="stylesheet">-->
+{% endblock %}
+
+{% block head_js %}
+    {{ super() }}
+    <!--<script src="{{url_for('static',filename='js/bootstrap.min.js')}}"></script>-->
+    <script src="{{url_for('static',filename='js/jquery-3.3.1.min.js')}}"></script>
+    <!--<script src="../static/bower_components/jquery/dist/jquery.min.js"></script>-->
+
+    <script>
+
+        function check(id) {
+            var element = document.getElementById(id);
+            var radio = document.getElementById("ra"+id);
+            if(element.checked){
+//                alert(radio.style.display)
+                    radio.style.display = "block";
+            }else{
+                    radio.style.display = "none";
+            }
+        }
+
+
+        function checkRadio(id, field_id) {
+            var element = document.getElementById(id);
+//            alert(field_id);
+            var radiotext = document.getElementById(field_id+"-othertext");
+            if(element.checked && id === field_id+"-other"){
+//                alert(radio.style.display)
+                    radiotext.style.display = "block";
+            }else{
+                    radiotext.style.display = "none";
+            }
+        }
+
+//                '<input type="text" name="mytext[]"/><a href="#" class="delete">Delete</a>' +
+
+//        $('.add_form_field').click(
+        function addFormField(fname, cntr) {
+            var plusbtn = document.getElementById(fname +'-btn-'+ cntr);
+            plusbtn.style.display = "none";
+            cntr = parseInt(cntr) + 1;
+            var wrapper = $("."+fname+"container");
+//            e.preventDefault();
+            $(wrapper).append('<div>' +
+                '<div class="row">' +
+                '<input type="text" name="'+ fname +'-'+ cntr +'">' +
+                '<button type="button" class="btn btn-default btn-sm add_form_field" id="'+ fname +'-btn-'+ cntr +'" onclick=addFormField("'+fname+'",'+ cntr +')>' +
+                '<span class="glyphicon glyphicon-plus-sign"></span>' +
+                '</button>' +
+                '</div>' +
+                '<input type="file" name="'+ fname +'-file-'+ cntr +'" id="'+ fname +'-file-'+ cntr +'" class="fileinput" onchange=addFileName("'+fname+'",'+ cntr +') multiple>' +
+                '<div class="'+fname+'-filenames-'+ cntr +'">' +
+                '</div>' +
+                '</div>'); //add input box
+        }
+
+
+        function addFileName(fname, cntr) {
+            var files = document.getElementById(fname +'-file-'+ cntr).files;
+            var wrapper = $("."+fname+"-filenames-"+cntr);
+            $(wrapper).empty();
+            if(files.length > 1){
+                for(var i=0;i<files.length;i++){
+                    $(wrapper).append('<p>' + files[i].name + '</p>')
+                }
+
+            }
+        }
+//        )
+
+//        $(wrapper).on("click",".delete", function(e){
+//            e.preventDefault(); $(this).parent('div').remove();
+//        })
+
+//        $("#skillset-Database").click(function() {
+//            if(document.getElementById("skillset-Database").checked){
+//                alert("asd")
+//            }
+//        }
+    </script>
+{% endblock %}
+
+{% block end_content scoped %}
+        <script>
+                $("input[class^='fileinput']").change(
+                function(e)
+                {
+                    alert('asd')
+                });
+        </script>
+
+{% endblock %}
