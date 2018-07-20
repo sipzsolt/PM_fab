@@ -5,6 +5,7 @@ from flask_appbuilder.fieldwidgets import BS3TextFieldWidget, DatePickerWidget
 from flask_appbuilder.forms import DynamicForm
 from app import db
 from .models import PM_Skillset
+import datetime
 
 
 emailmessage = 'Please add a correct email format!'
@@ -24,7 +25,6 @@ def select_multi_checkbox(field, ul_class='', **kwargs):
         radiooptions = dict(kwargs, id="ra"+choice_id, style="display: none")
         if checked:
             options['checked'] = 'checked'
-        flash(list(options.keys()), "info")
         html.append(u'<li><input %s/> ' % widgets.html_params(**options))
         html.append(u'<label for="%s">%s</label></li>' % (field_id, label))
 
@@ -55,7 +55,6 @@ def files_with_text(field, ul_class='', **kwargs):
     kwargs.setdefault('type', 'file')
     field_id = kwargs.pop('id', field.id)
 
-    # html = [u'<ul %s>' % widgets.html_params(id=field_id, class_=ul_class, style="list-style-type: none;")]
     html = [u'<div %s>' % widgets.html_params(class_=field.name+'container')]
 
     html.append(u'<div class="row">')
@@ -134,13 +133,13 @@ class Company(DynamicForm):
     subsidiaries = TextAreaField('Subsidiaries')
     associates = TextAreaField('Associates')
     international_offices = TextAreaField('International Offices', validators=[DataRequired()])
-    type_of_business = RadioField('Type of Business', choices=[("limited", "Corporate/ Limited"), ("partner", "Partnership"), ("other", "Other")], widget=radio_with_text)
-    nature_of_business = RadioField('Nature of Business', choices=[("limited", "Corporate/ Limited"), ("partner", "Partnership"), ("other", "Other")], widget=radio_with_text)
+    type_of_business = RadioField('Type of Business', choices=[("limited", "Corporate/ Limited"), ("partner", "Partnership"), ("other", "Other")], validators=[DataRequired()], widget=radio_with_text)
+    nature_of_business = RadioField('Nature of Business', choices=[("limited", "Corporate/ Limited"), ("partner", "Partnership"), ("other", "Other")], validators=[DataRequired()], widget=radio_with_text)
     year_of_establishment = IntegerField('Year Established', validators=[DataRequired()], widget=BS3TextFieldWidget())
     employees = IntegerField('Number of Full-time Employees', validators=[DataRequired()], widget=BS3TextFieldWidget())
     licence_number = StringField('Licence Number', validators=[DataRequired()], widget=BS3TextFieldWidget())
     vat_tax_id = StringField('VAT No./Tax I.D', validators=[DataRequired()], widget=BS3TextFieldWidget())
-    working_languages = MultiCheckboxField('Working Languages', choices=[("en", "en"), ("ge", "ge"), ("hu", "hu"), ("fr", "fr")])
+    working_languages = MultiCheckboxField('Working Languages', choices=[("en", "en"), ("ge", "ge"), ("hu", "hu"), ("fr", "fr")], validators=[DataRequired()])
     files = FileField(u'Files', widget=files_with_text)
 
 
@@ -168,7 +167,7 @@ class Banking(DynamicForm):
     annual_value_of_total_sales = StringField('Annual Value of Total Sales for the last 3 Years', validators=[DataRequired()], widget=BS3TextFieldWidget())
     annual_value_of_export_sales = StringField('Annual Value of Export Sales for the last 3 Years', validators=[DataRequired()], widget=BS3TextFieldWidget())
     audit_reports = FileField("If available, please provide a copy of the company's three latest annual or audited Financial Report.", widget=files_with_text)
-    bankruptcy_legal_action = StringField('Do you have outstanding bankruptcy, judgment or pending legal action that could impair operating as a going concern?', validators=[DataRequired()], widget=BS3TextFieldWidget())
+    bankruptcy_legal_action = RadioField('Do you have outstanding bankruptcy, judgment or pending legal action that could impair operating as a going concern?', choices=[("yes", "Yes"), ("no", "No")], validators=[DataRequired()])
     files = FileField(u'Files', widget=files_with_text)
 
 
@@ -176,7 +175,7 @@ class Skill(DynamicForm):
     skilldb = db.session.query(PM_Skillset).all()
     skillchoices = [(x, str(x).capitalize()) for x in skilldb]
 
-    skillset = MultiCheckboxFieldWithRate('Skillset', choices= skillchoices, widget=select_multi_checkbox)
+    skillset = MultiCheckboxFieldWithRate('Skillset', choices= skillchoices, validators=[DataRequired()], widget=select_multi_checkbox)
 
 
 class Services(DynamicForm):
@@ -215,6 +214,10 @@ class Add_Skill(DynamicForm):
     skill = StringField('Skill', validators=[DataRequired(), unique], widget=BS3TextFieldWidget())
 
 
+def chk_date_today(form, field):
+    if field.data < datetime.date.today():
+        raise ValidationError('"{0}" is an earlier date! Please add a future date!'.format(field.data))
+
 class New_PM_Project(DynamicForm):
     name = StringField('Project Name', validators=[DataRequired()], widget=BS3TextFieldWidget())
     description = TextAreaField('Project Description', validators=[DataRequired()])
@@ -226,35 +229,67 @@ class New_PM_Project(DynamicForm):
     person_days = IntegerField('Planned Person Days', validators=[DataRequired()], widget=BS3TextFieldWidget())
     responsible_person = StringField('Responsible Person', widget=BS3TextFieldWidget())
     backup_person = StringField('Backup Person', validators=[DataRequired()], widget=BS3TextFieldWidget())
-    project_planned_start = DateField('Project Planned Start', validators=[DataRequired()], widget=DatePickerWidget())
-    project_planned_end = DateField('Project Planned End', validators=[DataRequired()], widget=DatePickerWidget())
+    project_planned_start = DateField('Project Planned Start', validators=[DataRequired(), chk_date_today], widget=DatePickerWidget())
+    project_planned_end = DateField('Project Planned End', validators=[DataRequired(), chk_date_today], widget=DatePickerWidget())
+
+
+    def validate(self):
+        if not super().validate():
+            return False
+
+        if self.project_planned_end.data < self.project_planned_start.data:
+            self.project_planned_end.errors.append(
+                '"{0}" is earlier than the start date! Please add a future date!'.format(self.project_planned_end.data))
+            return False
+
+        return True
 
 
 # <___ Testing ___>
 
 class Com(DynamicForm):
 
-    type_of_business = RadioField('Type of Business', choices=[("limited", "Corporate/ Limited"), ("partner", "Partnership"), ("other", "Other")], widget=radio_with_text)
-    nature_of_business = RadioField('Nature of Business', choices=[("limited", "Corporate/ Limited"), ("partner", "Partnership"), ("other", "Other")], widget=radio_with_text)
-    company_email = StringField(('Company Email'), validators=[DataRequired(message='Please add a Company Email!'), Email(message=emailmessage)], widget=BS3TextFieldWidget())
+    # type_of_business = RadioField('Type of Business', choices=[("limited", "Corporate/ Limited"), ("partner", "Partnership"), ("other", "Other")], widget=radio_with_text)
+    # nature_of_business = RadioField('Nature of Business', choices=[("limited", "Corporate/ Limited"), ("partner", "Partnership"), ("other", "Other")], widget=radio_with_text)
+    # company_email = StringField(('Company Email'), validators=[DataRequired(message='Please add a Company Email!'), Email(message=emailmessage)], widget=BS3TextFieldWidget())
+    files = FileField(u'Files', widget=files_with_text)
+
 
 
 class Add_Skillt(DynamicForm):
-    skilldb = db.session.query(PM_Skillset).all()
-    skillchoices = [(x, str(x).capitalize()) for x in skilldb]
-
-    skillset = MultiCheckboxFieldWithRate(choices= skillchoices, widget=select_multi_checkbox)
-    skillt = FormField(Skill, label="Skill information")
-
-    # select_multi_checkbox(skillset)
-    type_of_business = RadioField('Type of Business',
-                                  choices=[("limited", "Corporate/ Limited"), ("partner", "Partnership"),("other", "Other")],
-                                  widget=radio_with_text
-                                  )
-
-    com = FormField(Com, label="comp", validators=[])
-
-    company_email = StringField('Company Email', validators=[DataRequired(message='Please add a Company Email!'), Email(message=emailmessage)], widget=BS3TextFieldWidget())
-
-    files = FileField(u'Files', widget=files_with_text)
+    # skilldb = db.session.query(PM_Skillset).all()
+    # skillchoices = [(x, str(x).capitalize()) for x in skilldb]
+    #
+    # skillset = MultiCheckboxFieldWithRate(choices= skillchoices, widget=select_multi_checkbox)
+    # skillt = FormField(Skill, label="Skill information")
+    #
+    # type_of_business = RadioField('Type of Business',
+    #                               choices=[("limited", "Corporate/ Limited"), ("partner", "Partnership"),("other", "Other")],
+    #                               widget=radio_with_text
+    #                               )
+    #
+    com = FormField(Com, label="comp")
+    com2 = FormField(Com, label="comp")
+    #
+    # company_email = StringField('Company Email', validators=[DataRequired(message='Please add a Company Email!'), Email(message=emailmessage)], widget=BS3TextFieldWidget())
+    #
+    # files = FileField(u'Files', widget=files_with_text)
     # description = TextAreaField(u'Image Description')
+
+'''
+    project_planned_start = DateField('Project Planned Start', validators=[DataRequired(), chk_date_today],
+                                      widget=DatePickerWidget())
+
+    project_planned_end = DateField('Project Planned End', validators=[DataRequired(), chk_date_today],
+                                    widget=DatePickerWidget())
+
+    def validate(self):
+        if not super().validate():
+            return False
+
+        if self.project_planned_end.data < self.project_planned_start.data:
+            self.project_planned_end.errors.append('"{0}" is earlier than the start date! Please add a future date!'.format(self.project_planned_end.data))
+            return False
+
+        return True
+'''

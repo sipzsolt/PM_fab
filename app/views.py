@@ -24,8 +24,10 @@ log = logging.getLogger(__name__)
 def Add_Table(tablename = '', data = []):
     if tablename == 'pm_skillset':
         inquery = PM_Skillset(name=form.skill.data.lower())
+        db.session.add(inquery)
     elif tablename == 'pm_user':
         inquery = ''    # n/a yet
+        db.session.add(inquery)
     elif tablename == 'pm_supplier':
         inquery = PM_Supplier(skill_grade=skillgrade,
                                  introduction=form.company.data["introduction"], quality_assurance=form.services.data["quality_assurance"],
@@ -33,10 +35,12 @@ def Add_Table(tablename = '', data = []):
                                  goods_list=form.services.data["goods_list"], service_list=form.services.data["service_list"],
                                  company_relations_id=corelqueryid, mailing_address_id=mailaddrqueryid,
                                  bank_id=bankqueryid, attachment_ids="1")
+        db.session.add(inquery)
     elif tablename == 'pm_customer':
         inquery = PM_Customer(introduction=form.company.data["introduction"],
                                  company_relations_id=corelqueryid, mailing_address_id=mailaddrqueryid,
                                  bank_id=bankqueryid, attachment_ids="1")
+        db.session.add(inquery)
     elif tablename == 'pm_project':
         inquery = PM_Project(skill_grade=skillgrade,
                                name=form.name.data,
@@ -51,10 +55,13 @@ def Add_Table(tablename = '', data = []):
                                customer_id=1,
                                project_history_ids="3",
                                attachment_ids="1")
+        db.session.add(inquery)
     elif tablename == 'pm_rating':
         inquery = ''    # n/a yet
+        db.session.add(inquery)
     elif tablename == 'pm_project_qa':
         inquery = ''    # n/a yet
+        db.session.add(inquery)
     elif tablename == 'pm_address':
         # need some edit
         inquery = PM_Address(street_address=form.company.data["company_address"],
@@ -65,8 +72,35 @@ def Add_Table(tablename = '', data = []):
         inquery = PM_Contact(phone_office=form.company.data["company_phone"],
                                    email=form.company.data["company_email"],
                                    fax=form.company.data["company_fax"], website=form.company.data["company_website"])
+        db.session.add(inquery)
     elif tablename == 'pm_attachment':
-        inquery = ''    # n/a yet
+        filefields = [x for x in request.files.keys()]
+        returndict = {}
+        # create dict for fields that will be returned with attachment ids
+        for i in data:
+            returndict[i] = ''
+        # pdb.set_trace()
+        filenames = []
+        unique_filenames = []
+        for filefield in filefields:
+            for i in request.files.getlist(filefield):
+                filenames.append(i.filename)
+                unique_filenames.append(uuid.uuid4().hex)
+                unique_filename = uuid.uuid4().hex
+                i.save(appbuilder.app.config['UPLOAD_FOLDER'] + unique_filename)
+
+                inquery = PM_Attachment(table_id=filefield.split('-')[0],
+                                         table_name=request.form[filefield.replace('file-','')],
+                                         file=i.filename,
+                                         ufilename=unique_filename)
+
+                db.session.add(inquery)
+                db.session.commit()
+                returndict[filefield.split('-')[0]] += str(inquery.id) + ';'
+                # db.session.flush()
+                # inquery = ''
+
+        return returndict
     elif tablename == 'pm_banking':
         inquery = PM_Banking(bank_name=form.banking.data["bank_name"], branch_name=form.banking.data["branch_name"],
                                bank_account_number=form.banking.data["bank_account_number"],
@@ -79,6 +113,7 @@ def Add_Table(tablename = '', data = []):
                                bankruptcy_legal_action=form.banking.data["bankruptcy_legal_action"],
                                branch_address_id=branchaddrqueryid, branch_contact_id=branchcontqueryid,
                                attachment_ids="1")
+        db.session.add(inquery)
     elif tablename == 'pm_company_relations':
         inquery = PM_Company_Relations(company_name=form.company.data["company_name"],
                                           parent_company=form.company.data["parent_company"],
@@ -95,13 +130,13 @@ def Add_Table(tablename = '', data = []):
                                           company_address_id=compaddrqueryid, company_contact_id=compcontqueryid,
                                           attachment_ids="1"
                                           )
+        db.session.add(inquery)
     else:
         inquery = ''
 
     if inquery == '':
         inquery = "Not adequate data!"
     else:
-        db.session.add(inquery)
         db.session.commit()
     return inquery
 
@@ -178,6 +213,8 @@ class New_PM_CustomerForm(SimpleFormView):
     def form_post(self, form):
         # post process form
         #
+        attachmentiddict = Add_Table('pm_attachment', ['company', 'banking'])
+        #
         compaddrquery = PM_Address(street_address=form.company.data["company_address"],
                                    postal_nr=form.company.data["company_postal_nr"],
                                    city=form.company.data["company_city"], country=form.company.data["company_country"])
@@ -216,7 +253,7 @@ class New_PM_CustomerForm(SimpleFormView):
                                           working_languages=";".join(
                                               [x for x in form.company.data["working_languages"]]),
                                           company_address_id=compaddrqueryid, company_contact_id=compcontqueryid,
-                                          attachment_ids="1"
+                                          attachment_ids=attachmentiddict['company']
                                           )
         db.session.add(corelquery)
         db.session.commit()
@@ -252,14 +289,14 @@ class New_PM_CustomerForm(SimpleFormView):
                                audit_reports=form.banking.data["audit_reports"],
                                bankruptcy_legal_action=form.banking.data["bankruptcy_legal_action"],
                                branch_address_id=branchaddrqueryid, branch_contact_id=branchcontqueryid,
-                               attachment_ids="1")
+                               attachment_ids=attachmentiddict['banking'])
         db.session.add(bankquery)
         db.session.commit()
         bankqueryid = bankquery.id
         #
         custquery = PM_Customer(introduction=form.company.data["introduction"],
                                  company_relations_id=corelqueryid, mailing_address_id=mailaddrqueryid,
-                                 bank_id=bankqueryid, attachment_ids="1")
+                                 bank_id=bankqueryid, attachment_ids=attachmentiddict['company']+attachmentiddict['banking'])
 
         db.session.add(custquery)
         db.session.commit()
@@ -277,6 +314,8 @@ class New_PM_SupplierForm(SimpleFormView):
 
     def form_post(self, form):
         # post process form
+        #
+        attachmentiddict = Add_Table('pm_attachment', ['company', 'banking'])
         #
         compaddrquery = PM_Address(street_address=form.company.data["company_address"], postal_nr=form.company.data["company_postal_nr"],
                                    city=form.company.data["company_city"], country=form.company.data["company_country"])
@@ -311,7 +350,7 @@ class New_PM_SupplierForm(SimpleFormView):
                                           licence_number=form.company.data["licence_number"], vat_tax_id=form.company.data["vat_tax_id"],
                                           working_languages=";".join([x for x in form.company.data["working_languages"]]),
                                           company_address_id=compaddrqueryid, company_contact_id=compcontqueryid,
-                                          attachment_ids="1"
+                                          attachment_ids=attachmentiddict['company']
                                           )
         db.session.add(corelquery)
         db.session.commit()
@@ -344,7 +383,7 @@ class New_PM_SupplierForm(SimpleFormView):
                                audit_reports=form.banking.data["audit_reports"],
                                bankruptcy_legal_action=form.banking.data["bankruptcy_legal_action"],
                                branch_address_id=branchaddrqueryid, branch_contact_id=branchcontqueryid,
-                               attachment_ids="1")
+                               attachment_ids=attachmentiddict['banking'])
         db.session.add(bankquery)
         db.session.commit()
         bankqueryid = bankquery.id
@@ -356,7 +395,7 @@ class New_PM_SupplierForm(SimpleFormView):
                                  certification=form.services.data["certification"], goods_service=form.services.data["goods_service"],
                                  goods_list=form.services.data["goods_list"], service_list=form.services.data["service_list"],
                                  company_relations_id=corelqueryid, mailing_address_id=mailaddrqueryid,
-                                 bank_id=bankqueryid, attachment_ids="1")
+                                 bank_id=bankqueryid, attachment_ids=attachmentiddict['company']+attachmentiddict['banking'])
 
         db.session.add(supplquery)
         db.session.commit()
@@ -367,7 +406,6 @@ class New_PM_SupplierForm(SimpleFormView):
 
         db.session.commit()
 
-        flash(skillgrade, 'info')
         flash(self.message, 'info')
 
 
@@ -462,27 +500,30 @@ class Add_SkilltForm(SimpleFormView):
         # post process form
         # for attr in dir(request):
         #     flash("obj.%s = %r" % (attr, getattr(request, attr)), 'info')
-        skillgrade = ";".join([request.form["raskillset-" + x] for x in form.skillset.data])
+        # skillgrade = ";".join([request.form["raskillset-" + x] for x in form.skillset.data])
+        #
+        # filenames = []
+        # unique_filenames = []
+        # for i in request.files.getlist('files-file-0'):
+        #     filenames.append(i.filename)
+        #     unique_filenames.append(uuid.uuid4().hex)
+        #     unique_filename = uuid.uuid4().hex
+        #     i.save(self.appbuilder.app.config['UPLOAD_FOLDER'] + unique_filename)
+        #
+        # cntr = 0
+        # for i in filenames:
+        #     attquery = PM_Attachment(table_id='test',
+        #                              table_name=request.form['files-0'],
+        #                              file=i,
+        #                              ufilename=unique_filenames[cntr])
+        #     cntr += 1
+        #
+        #     db.session.add(attquery)
+        # db.session.commit()
 
-        filenames = []
-        unique_filenames = []
-        for i in request.files.getlist('files-file-0'):
-            filenames.append(i.filename)
-            unique_filenames.append(uuid.uuid4().hex)
-            unique_filename = uuid.uuid4().hex
-            i.save(self.appbuilder.app.config['UPLOAD_FOLDER'] + unique_filename)
+        # Add_Table('pm_attachment', ['com', 'com2'])
 
-        cntr = 0
-        for i in filenames:
-            attquery = PM_Attachment(table_id='test',
-                                     table_name=request.form['files-0'],
-                                     file=i,
-                                     ufilename=unique_filenames[cntr])
-            cntr += 1
-
-            db.session.add(attquery)
-        db.session.commit()
-
+        # flash(Add_Table('pm_attachment', ['com', 'com2']), 'info')
         flash(self.message, 'info')
         # pdb.set_trace()
 
