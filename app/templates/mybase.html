@@ -78,6 +78,36 @@
                 area.className = "form-control";
             })
 
+
+            const stars = document.querySelectorAll("strong");
+            stars.forEach((star) => {
+                if(star.outerText == "*"){
+                    star.style.color = "#008cba"
+                }
+            })
+
+            const chk_othertext = (fname, ro, ot) => {
+                if(ro.checked && ot.value === ""){
+                    ot.value = sessionStorage[fname+'text'];
+                }else{
+                    sessionStorage.removeItem(fname+'text')
+                }
+            }
+
+            const tob_name = 'type_of_business-other';
+            const nob_name = 'nature_of_business-other';
+            const tob_ot = document.querySelector('#type_of_business-othertext');
+            const tob_ro = document.querySelector('#type_of_business-other');
+            tob_ot.addEventListener('change', (e) => ot_chg(e))
+            const nob_ot = document.querySelector('#nature_of_business-othertext');
+            const nob_ro = document.querySelector('#nature_of_business-other');
+            nob_ot.addEventListener('change', (e) => ot_chg(e))
+
+
+            const ot_chg = (e) => sessionStorage.setItem(e.target.id, e.target.value)
+
+            chk_othertext(tob_name, tob_ro, tob_ot)
+            chk_othertext(nob_name, nob_ro, nob_ot)
           //do work
         });
 //        const multiplyES6 = (x, y) => { return x * y };

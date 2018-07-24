@@ -1,5 +1,6 @@
 from flask import render_template, flash, redirect, request, url_for
 from flask_appbuilder import BaseView, expose, has_access, ModelView, SimpleFormView
+from flask_appbuilder.actions import action
 from app import db, appbuilder
 import datetime
 from flask_appbuilder.models.sqla.interface import SQLAInterface
@@ -178,7 +179,6 @@ class CustomerView(ModelView):
 
 class ProjectView(ModelView):
     datamodel = SQLAInterface(PM_Project, db.session)
-    # datamodel.query(filters=projfill)
 
     # base_filters = [['budget', FilterEqual, '10']]
 
@@ -199,6 +199,11 @@ class ProjectView(ModelView):
         ),
     ]
 
+    @action("mulbid", "Bid", "Do you really want to bid all?", "fa-rocket", single=False)
+    def mulbid(self, items):
+        self.datamodel.delete_all(items)
+        self.update_redirect()
+        return redirect(self.get_redirect())
 
 class RatingView(ModelView):
     datamodel = SQLAInterface(PM_Rating)
@@ -463,11 +468,12 @@ class New_PM_ProjectForm(SimpleFormView):
 
     def form_post(self, form):
         # post process form
+        budget = form.budget.data + ' ' + request.form['budget-select']
         skillgrade = ";".join([x + '-' + request.form["raskillset-" + x] for x in form.skillset.data])
         projquery = PM_Project(skill_grade=skillgrade,
                                 name=form.name.data,
                                 description=form.description.data,
-                                budget=form.budget.data,
+                                budget=budget,
                                 employees_need=form.employees_need.data,
                                 person_days=form.person_days.data,
                                 responsible_person=form.responsible_person.data,
@@ -504,6 +510,9 @@ class Add_SkilltForm(SimpleFormView):
 
     def form_post(self, form):
         pdb.set_trace()
+        self.update_redirect()
+        self.get_redirect()
+        redirect(self.route_base)
     # def form_post(self, form):
 
         # for attr in dir(self):
