@@ -4,41 +4,38 @@
 
 {% block head_css %}
     {{ super() }}
-    <!--<link href="{{url_for('static',filename='css/landing-page.css')}}" rel="stylesheet">-->
+    <!--<link href="{{url_for('static',filename='templates/custom.css')}}" rel="stylesheet">-->
     <!--<link href="{{url_for('static',filename='css/bootstrap.min.css')}}" rel="stylesheet">-->
 {% endblock %}
 
 {% block head_js %}
     {{ super() }}
     <!--<script src="{{url_for('static',filename='js/bootstrap.min.js')}}"></script>-->
-    <script src="{{url_for('static',filename='js/jquery-3.3.1.min.js')}}"></script>
+    <!--<script src="{{url_for('static',filename='js/jquery-3.3.1.min.js')}}"></script>-->
     <!--<script src="../static/bower_components/jquery/dist/jquery.min.js"></script>-->
 
     <script>
 
-        function check(id) {
-            var element = document.getElementById(id);
-            var radio = document.getElementById("ra"+id);
-            if(element.checked){
-//                alert(radio.style.display)
-                    radio.style.display = "block";
-            }else{
-                    radio.style.display = "none";
-            }
-        }
+//        function check(id) {
+//            var element = document.getElementById(id);
+//            var radio = document.getElementById("ra"+id);
+//            if(element.checked){
+//                    radio.style.display = "block";
+//            }else{
+//                    radio.style.display = "none";
+//            }
+//        }
 
 
-        function checkRadio(id, field_id) {
-            var element = document.getElementById(id);
-//            alert(field_id);
-            var radiotext = document.getElementById(field_id+"-othertext");
-            if(element.checked && id === field_id+"-other"){
-//                alert(radio.style.display)
-                    radiotext.style.display = "block";
-            }else{
-                    radiotext.style.display = "none";
-            }
-        }
+//        function checkRadio(id, field_id) {
+//            var element = document.getElementById(id);
+//            var radiotext = document.getElementById(field_id+"-othertext");
+//            if(element.checked && id === field_id+"-other"){
+//                    radiotext.style.display = "block";
+//            }else{
+//                    radiotext.style.display = "none";
+//            }
+//        }
 
 //                '<input type="text" name="mytext[]"/><a href="#" class="delete">Delete</a>' +
 
@@ -50,15 +47,13 @@
             var wrapper = $("."+fname+"container");
 //            e.preventDefault();
             $(wrapper).append('<div>' +
-                '<div class="row">' +
-                '<input type="text" name="'+ fname +'-'+ cntr +'">' +
-                '<button type="button" class="btn btn-default btn-sm add_form_field" id="'+ fname +'-btn-'+ cntr +'" onclick=addFormField("'+fname+'",'+ cntr +')>' +
+                '<input type="text" name="'+ fname +'-'+ cntr +'" class="form-control">' +
+                '<button type="button" class="btn btn-default btn-sm add_form_field" id="'+ fname +'-btn-'+ cntr +'" style="float: right;" onclick=addFormField("'+fname+'",'+ cntr +')>' +
                 '<span class="glyphicon glyphicon-plus-sign"></span>' +
                 '</button>' +
                 '</div>' +
                 '<input type="file" name="'+ fname +'-file-'+ cntr +'" id="'+ fname +'-file-'+ cntr +'" class="fileinput" onchange=addFileName("'+fname+'",'+ cntr +') multiple>' +
                 '<div class="'+fname+'-filenames-'+ cntr +'">' +
-                '</div>' +
                 '</div>'); //add input box
         }
 
@@ -75,6 +70,16 @@
             }
         }
 
+        document.addEventListener("DOMContentLoaded", function(event) {
+
+            const textareas = document.querySelectorAll("textarea");
+            textareas[0].rows = 5;
+            textareas.forEach((area) => {
+                area.className = "form-control";
+            })
+
+          //do work
+        });
 //        const multiplyES6 = (x, y) => { return x * y };
 //        console.log(multiplyES6(5,6));
 //        )
@@ -89,5 +94,14 @@
 //            }
 //        }
     </script>
+    <style>
+        .inputfile{
+                /*width: 230px;*/
+        }
+        ul{
+            list-style-type: none;
+            padding-left: 0px;
+        }
+    </style>
 {% endblock %}
 

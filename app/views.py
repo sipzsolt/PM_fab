@@ -20,6 +20,15 @@ log = logging.getLogger(__name__)
 
 # <___ Custom functions ___>
 
+def skill_update():
+    skilldb = db.session.query(PM_Skillset).all()
+    skillchoices = [(x, str(x).capitalize()) for x in skilldb]
+
+    return skillchoices
+
+def phone_corr(nr):
+    return nr.replace('+','').replace('-','')
+
 # adding data to sql with tablename
 def Add_Table(tablename = '', data = []):
     if tablename == 'pm_skillset':
@@ -30,14 +39,14 @@ def Add_Table(tablename = '', data = []):
         db.session.add(inquery)
     elif tablename == 'pm_supplier':
         inquery = PM_Supplier(skill_grade=skillgrade,
-                                 introduction=form.company.data["introduction"], quality_assurance=form.services.data["quality_assurance"],
-                                 certification=form.services.data["certification"], goods_service=form.services.data["goods_service"],
-                                 goods_list=form.services.data["goods_list"], service_list=form.services.data["service_list"],
+                                 introduction=form.introduction.data, quality_assurance=form.quality_assurance.data,
+                                 certification=form.certification.data, goods_service=form.goods_service.data,
+                                 goods_list=form.goods_list.data, service_list=form.service_list.data,
                                  company_relations_id=corelqueryid, mailing_address_id=mailaddrqueryid,
                                  bank_id=bankqueryid, attachment_ids="1")
         db.session.add(inquery)
     elif tablename == 'pm_customer':
-        inquery = PM_Customer(introduction=form.company.data["introduction"],
+        inquery = PM_Customer(introduction=form.introduction.data,
                                  company_relations_id=corelqueryid, mailing_address_id=mailaddrqueryid,
                                  bank_id=bankqueryid, attachment_ids="1")
         db.session.add(inquery)
@@ -64,14 +73,14 @@ def Add_Table(tablename = '', data = []):
         db.session.add(inquery)
     elif tablename == 'pm_address':
         # need some edit
-        inquery = PM_Address(street_address=form.company.data["company_address"],
-                                   postal_nr=form.company.data["company_postal_nr"],
-                                   city=form.company.data["company_city"], country=form.company.data["company_country"])
+        inquery = PM_Address(street_address=form.company_address.data,
+                                   postal_nr=form.company_postal_nr.data,
+                                   city=form.company_city.data, country=form.company_country.data)
     elif tablename == 'pm_contact':
         # need some edit
-        inquery = PM_Contact(phone_office=form.company.data["company_phone"],
-                                   email=form.company.data["company_email"],
-                                   fax=form.company.data["company_fax"], website=form.company.data["company_website"])
+        inquery = PM_Contact(phone_office=phone_corr(form.company_phone.data),
+                                   email=form.company_email.data,
+                                   fax=form.company_fax.data, website=form.company_website.data)
         db.session.add(inquery)
     elif tablename == 'pm_attachment':
         filefields = [x for x in request.files.keys()]
@@ -102,31 +111,31 @@ def Add_Table(tablename = '', data = []):
 
         return returndict
     elif tablename == 'pm_banking':
-        inquery = PM_Banking(bank_name=form.banking.data["bank_name"], branch_name=form.banking.data["branch_name"],
-                               bank_account_number=form.banking.data["bank_account_number"],
-                               account_currency=form.banking.data["account_currency"],
-                               iban=form.banking.data["iban"], bic=form.banking.data["bic"],
-                               routing_bank_details=form.banking.data["routing_bank_details"],
-                               annual_value_of_total_sales=form.banking.data["annual_value_of_total_sales"],
-                               annual_value_of_export_sales=form.banking.data["annual_value_of_export_sales"],
-                               audit_reports=form.banking.data["audit_reports"],
-                               bankruptcy_legal_action=form.banking.data["bankruptcy_legal_action"],
+        inquery = PM_Banking(bank_name=form.bank_name.data, branch_name=form.branch_name.data,
+                               bank_account_number=form.bank_account_number.data,
+                               account_currency=form.account_currency.data,
+                               iban=form.iban.data, bic=form.bic.data,
+                               routing_bank_details=form.routing_bank_details.data,
+                               annual_value_of_total_sales=form.annual_value_of_total_sales.data,
+                               annual_value_of_export_sales=form.annual_value_of_export_sales.data,
+                               audit_reports=form.audit_reports.data,
+                               bankruptcy_legal_action=form.bankruptcy_legal_action.data,
                                branch_address_id=branchaddrqueryid, branch_contact_id=branchcontqueryid,
                                attachment_ids="1")
         db.session.add(inquery)
     elif tablename == 'pm_company_relations':
-        inquery = PM_Company_Relations(company_name=form.company.data["company_name"],
-                                          parent_company=form.company.data["parent_company"],
-                                          subsidiaries=form.company.data["subsidiaries"],
-                                          associates=form.company.data["associates"],
-                                          international_offices=form.company.data["international_offices"],
+        inquery = PM_Company_Relations(company_name=form.company_name.data,
+                                          parent_company=form.parent_company.data,
+                                          subsidiaries=form.subsidiaries.data,
+                                          associates=form.associates.data,
+                                          international_offices=form.international_offices.data,
                                           type_of_business=type_of_business,
                                           nature_of_business=nature_of_business,
-                                          year_of_establishment=form.company.data["year_of_establishment"],
-                                          employees=form.company.data["employees"],
-                                          licence_number=form.company.data["licence_number"],
-                                          vat_tax_id=form.company.data["vat_tax_id"],
-                                          working_languages=";".join([x for x in form.company.data["working_languages"]]),
+                                          year_of_establishment=form.year_of_establishment.data,
+                                          employees=form.employees.data,
+                                          licence_number=form.licence_number.data,
+                                          vat_tax_id=form.vat_tax_id.data,
+                                          working_languages=";".join([x for x in form.working_languages.data]),
                                           company_address_id=compaddrqueryid, company_contact_id=compcontqueryid,
                                           attachment_ids="1"
                                           )
@@ -202,221 +211,230 @@ class Project_QAView(ModelView):
 # <___ FormViews ___>
 
 class New_PM_CustomerForm(SimpleFormView):
+    # route_base = '/new_pm_customerform'
     form = New_PM_Customer
     form_title = 'Customer Registration'
     message = 'The form was submitted'
 
-    def form_get(self, form):
-        # form.field[0].data = 'This was prefilled'
-        True
-
     def form_post(self, form):
         # post process form
         #
-        attachmentiddict = Add_Table('pm_attachment', ['company', 'banking'])
+        attachmentiddict = Add_Table('pm_attachment', ['audit_reports', 'compfiles', 'bankfiles'])
         #
-        compaddrquery = PM_Address(street_address=form.company.data["company_address"],
-                                   postal_nr=form.company.data["company_postal_nr"],
-                                   city=form.company.data["company_city"], country=form.company.data["company_country"])
+        compaddrquery = PM_Address(street_address=form.company_address.data,
+                                   postal_nr=form.company_postal_nr.data,
+                                   city=form.company_city.data, country=form.company_country.data)
         db.session.add(compaddrquery)
         db.session.commit()
         compaddrqueryid = compaddrquery.id
         #
-        compcontquery = PM_Contact(phone_office=form.company.data["company_phone"],
-                                   email=form.company.data["company_email"],
-                                   fax=form.company.data["company_fax"], website=form.company.data["company_website"])
+        compcontquery = PM_Contact(phone_office=phone_corr(form.company_phone.data),
+                                   email=form.company_email.data,
+                                   fax=form.company_fax.data, website=form.company_website.data)
         db.session.add(compcontquery)
         db.session.commit()
         compcontqueryid = compcontquery.id
         #
 
-        if form.company.data["type_of_business"] == 'other':
-            type_of_business = request.form["company-type_of_business-othertext"]
+        if form.type_of_business.data == 'other':
+            type_of_business = request.form["type_of_business-othertext"]
         else:
-            type_of_business = form.company.data["type_of_business"]
+            type_of_business = form.type_of_business.data
 
-        if form.company.data["nature_of_business"] == 'other':
-            nature_of_business = request.form["company-nature_of_business-othertext"]
+        if form.nature_of_business.data == 'other':
+            nature_of_business = request.form["nature_of_business-othertext"]
         else:
-            nature_of_business = form.company.data["nature_of_business"]
-        corelquery = PM_Company_Relations(company_name=form.company.data["company_name"],
-                                          parent_company=form.company.data["parent_company"],
-                                          subsidiaries=form.company.data["subsidiaries"],
-                                          associates=form.company.data["associates"],
-                                          international_offices=form.company.data["international_offices"],
+            nature_of_business = form.nature_of_business.data
+        corelquery = PM_Company_Relations(company_name=form.company_name.data,
+                                          parent_company=form.parent_company.data,
+                                          subsidiaries=form.subsidiaries.data,
+                                          associates=form.associates.data,
+                                          international_offices=form.international_offices.data,
                                           type_of_business=type_of_business,
                                           nature_of_business=nature_of_business,
-                                          year_of_establishment=form.company.data["year_of_establishment"],
-                                          employees=form.company.data["employees"],
-                                          licence_number=form.company.data["licence_number"],
-                                          vat_tax_id=form.company.data["vat_tax_id"],
-                                          working_languages=";".join(
-                                              [x for x in form.company.data["working_languages"]]),
+                                          year_of_establishment=form.year_of_establishment.data,
+                                          employees=form.employees.data,
+                                          licence_number=form.licence_number.data,
+                                          vat_tax_id=form.vat_tax_id.data,
+                                          working_languages=";".join([x for x in form.working_languages.data]),
                                           company_address_id=compaddrqueryid, company_contact_id=compcontqueryid,
-                                          attachment_ids=attachmentiddict['company']
+                                          attachment_ids=attachmentiddict['compfiles']
                                           )
         db.session.add(corelquery)
         db.session.commit()
         corelqueryid = corelquery.id
         #
-        mailaddrquery = PM_Address(street_address=form.mailing.data["mailing_address"],
-                                   postal_nr=form.mailing.data["mailing_postal_nr"],
-                                   city=form.mailing.data["mailing_city"], country=form.mailing.data["mailing_country"])
+        mailaddrquery = PM_Address(street_address=form.mailing_address.data,
+                                   postal_nr=form.mailing_postal_nr.data,
+                                   city=form.mailing_city.data, country=form.mailing_country.data)
         db.session.add(mailaddrquery)
         db.session.commit()
         mailaddrqueryid = mailaddrquery.id
         #
-        branchaddrquery = PM_Address(street_address=form.banking.data["branch_address"],
-                                     postal_nr=form.banking.data["branch_postal_nr"],
-                                     city=form.banking.data["branch_city"], country=form.banking.data["branch_country"])
+        branchaddrquery = PM_Address(street_address=form.branch_address.data,
+                                     postal_nr=form.branch_postal_nr.data,
+                                     city=form.branch_city.data, country=form.branch_country.data)
         db.session.add(branchaddrquery)
         db.session.commit()
         branchaddrqueryid = branchaddrquery.id
         #
-        branchcontquery = PM_Contact(phone_office=form.banking.data["branch_phone"],
-                                     fax=form.banking.data["branch_fax"], email="n@n.n")
+        branchcontquery = PM_Contact(phone_office=phone_corr(form.branch_phone.data),
+                                     fax=form.branch_fax.data, email="n@n.n")
         db.session.add(branchcontquery)
         db.session.commit()
         branchcontqueryid = branchcontquery.id
         #
-        bankquery = PM_Banking(bank_name=form.banking.data["bank_name"], branch_name=form.banking.data["branch_name"],
-                               bank_account_number=form.banking.data["bank_account_number"],
-                               account_currency=form.banking.data["account_currency"],
-                               iban=form.banking.data["iban"], bic=form.banking.data["bic"],
-                               routing_bank_details=form.banking.data["routing_bank_details"],
-                               annual_value_of_total_sales=form.banking.data["annual_value_of_total_sales"],
-                               annual_value_of_export_sales=form.banking.data["annual_value_of_export_sales"],
-                               audit_reports=form.banking.data["audit_reports"],
-                               bankruptcy_legal_action=form.banking.data["bankruptcy_legal_action"],
+        if len(attachmentiddict['audit_reports']) == 0:
+            audit_reports = 'n'
+        else:
+            audit_reports = 'y'
+        bankquery = PM_Banking(bank_name=form.bank_name.data, branch_name=form.branch_name.data,
+                               bank_account_number=form.bank_account_number.data,
+                               account_currency=form.account_currency.data,
+                               iban=form.iban.data, bic=form.bic.data,
+                               routing_bank_details=form.routing_bank_details.data,
+                               annual_value_of_total_sales=form.annual_value_of_total_sales.data,
+                               annual_value_of_export_sales=form.annual_value_of_export_sales.data,
+                               audit_reports=audit_reports,
+                               bankruptcy_legal_action=form.bankruptcy_legal_action.data,
                                branch_address_id=branchaddrqueryid, branch_contact_id=branchcontqueryid,
-                               attachment_ids=attachmentiddict['banking'])
+                               attachment_ids=attachmentiddict['bankfiles']+attachmentiddict['audit_reports'])
         db.session.add(bankquery)
         db.session.commit()
         bankqueryid = bankquery.id
         #
-        custquery = PM_Customer(introduction=form.company.data["introduction"],
+        custquery = PM_Customer(introduction=form.introduction.data,
                                  company_relations_id=corelqueryid, mailing_address_id=mailaddrqueryid,
-                                 bank_id=bankqueryid, attachment_ids=attachmentiddict['company']+attachmentiddict['banking'])
+                                 bank_id=bankqueryid, attachment_ids='')
 
         db.session.add(custquery)
         db.session.commit()
         flash(self.message, 'info')
+        # return redirect(self.route_base + "/form")
+        self.update_redirect()
+        self.get_redirect()
+        redirect(self.route_base)
 
 
 class New_PM_SupplierForm(SimpleFormView):
+    # route_base = '/new_pm_supplierform'
     form = New_PM_Supplier
     form_title = 'Supplier Registration'
     message = 'The form was submitted'
 
     def form_get(self, form):
-        # flash(self.formdata('company_address', form.company), 'info')
-        True
+        form.skillset.choices = skill_update()
 
     def form_post(self, form):
         # post process form
         #
-        attachmentiddict = Add_Table('pm_attachment', ['company', 'banking'])
+        attachmentiddict = Add_Table('pm_attachment', ['audit_reports', 'compfiles', 'servicefiles', 'bankfiles'])
         #
-        compaddrquery = PM_Address(street_address=form.company.data["company_address"], postal_nr=form.company.data["company_postal_nr"],
-                                   city=form.company.data["company_city"], country=form.company.data["company_country"])
+        compaddrquery = PM_Address(street_address=form.company_address.data, postal_nr=form.company_postal_nr.data,
+                                   city=form.company_city.data, country=form.company_country.data)
         db.session.add(compaddrquery)
         db.session.commit()
         compaddrqueryid = compaddrquery.id
         #
-        compcontquery = PM_Contact(phone_office=form.company.data["company_phone"], email=form.company.data["company_email"],
-                                   fax=form.company.data["company_fax"], website=form.company.data["company_website"])
+        compcontquery = PM_Contact(phone_office=phone_corr(form.company_phone.data), email=form.company_email.data,
+                                   fax=form.company_fax.data, website=form.company_website.data)
         db.session.add(compcontquery)
         db.session.commit()
         compcontqueryid = compcontquery.id
         #
-        if form.company.data["type_of_business"] == 'other':
-            type_of_business = request.form["company-type_of_business-othertext"]
+        if form.type_of_business.data == 'other':
+            type_of_business = request.form["type_of_business-othertext"]
         else:
-            type_of_business = form.company.data["type_of_business"]
+            type_of_business = form.type_of_business.data
 
-        if form.company.data["nature_of_business"] == 'other':
-            nature_of_business = request.form["company-nature_of_business-othertext"]
+        if form.nature_of_business.data == 'other':
+            nature_of_business = request.form["nature_of_business-othertext"]
         else:
-            nature_of_business = form.company.data["nature_of_business"]
+            nature_of_business = form.nature_of_business.data
 
-        corelquery = PM_Company_Relations(company_name=form.company.data["company_name"], parent_company=form.company.data["parent_company"],
-                                          subsidiaries=form.company.data["subsidiaries"],
-                                          associates=form.company.data["associates"],
-                                          international_offices=form.company.data["international_offices"],
+        corelquery = PM_Company_Relations(company_name=form.company_name.data, parent_company=form.parent_company.data,
+                                          subsidiaries=form.subsidiaries.data,
+                                          associates=form.associates.data,
+                                          international_offices=form.international_offices.data,
                                           type_of_business=type_of_business,
                                           nature_of_business=nature_of_business,
-                                          year_of_establishment=form.company.data["year_of_establishment"],
-                                          employees=form.company.data["employees"],
-                                          licence_number=form.company.data["licence_number"], vat_tax_id=form.company.data["vat_tax_id"],
-                                          working_languages=";".join([x for x in form.company.data["working_languages"]]),
+                                          year_of_establishment=form.year_of_establishment.data,
+                                          employees=form.employees.data,
+                                          licence_number=form.licence_number.data, vat_tax_id=form.vat_tax_id.data,
+                                          working_languages=";".join([x for x in form.working_languages.data]),
                                           company_address_id=compaddrqueryid, company_contact_id=compcontqueryid,
-                                          attachment_ids=attachmentiddict['company']
+                                          attachment_ids=attachmentiddict['compfiles']
                                           )
         db.session.add(corelquery)
         db.session.commit()
         corelqueryid = corelquery.id
         #
-        mailaddrquery = PM_Address(street_address=form.mailing.data["mailing_address"], postal_nr=form.mailing.data["mailing_postal_nr"],
-                                   city=form.mailing.data["mailing_city"], country=form.mailing.data["mailing_country"])
+        mailaddrquery = PM_Address(street_address=form.mailing_address.data, postal_nr=form.mailing_postal_nr.data,
+                                   city=form.mailing_city.data, country=form.mailing_country.data)
         db.session.add(mailaddrquery)
         db.session.commit()
         mailaddrqueryid = mailaddrquery.id
         #
-        branchaddrquery = PM_Address(street_address=form.banking.data["branch_address"], postal_nr=form.banking.data["branch_postal_nr"],
-                                     city=form.banking.data["branch_city"], country=form.banking.data["branch_country"])
+        branchaddrquery = PM_Address(street_address=form.branch_address.data, postal_nr=form.branch_postal_nr.data,
+                                     city=form.branch_city.data, country=form.branch_country.data)
         db.session.add(branchaddrquery)
         db.session.commit()
         branchaddrqueryid = branchaddrquery.id
         #
-        branchcontquery = PM_Contact(phone_office=form.banking.data["branch_phone"], fax=form.banking.data["branch_fax"], email="n@n.n")
+        branchcontquery = PM_Contact(phone_office=phone_corr(form.branch_phone.data), fax=form.branch_fax.data, email="n@n.n")
         db.session.add(branchcontquery)
         db.session.commit()
         branchcontqueryid = branchcontquery.id
         #
-        bankquery = PM_Banking(bank_name=form.banking.data["bank_name"], branch_name=form.banking.data["branch_name"],
-                               bank_account_number=form.banking.data["bank_account_number"],
-                               account_currency=form.banking.data["account_currency"],
-                               iban=form.banking.data["iban"], bic=form.banking.data["bic"],
-                               routing_bank_details=form.banking.data["routing_bank_details"],
-                               annual_value_of_total_sales=form.banking.data["annual_value_of_total_sales"],
-                               annual_value_of_export_sales=form.banking.data["annual_value_of_export_sales"],
-                               audit_reports=form.banking.data["audit_reports"],
-                               bankruptcy_legal_action=form.banking.data["bankruptcy_legal_action"],
+        if len(attachmentiddict['audit_reports']) == 0:
+            audit_reports = 'n'
+        else:
+            audit_reports = 'y'
+        bankquery = PM_Banking(bank_name=form.bank_name.data, branch_name=form.branch_name.data,
+                               bank_account_number=form.bank_account_number.data,
+                               account_currency=form.account_currency.data,
+                               iban=form.iban.data, bic=form.bic.data,
+                               routing_bank_details=form.routing_bank_details.data,
+                               annual_value_of_total_sales=form.annual_value_of_total_sales.data,
+                               annual_value_of_export_sales=form.annual_value_of_export_sales.data,
+                               audit_reports=audit_reports,
+                               bankruptcy_legal_action=form.bankruptcy_legal_action.data,
                                branch_address_id=branchaddrqueryid, branch_contact_id=branchcontqueryid,
-                               attachment_ids=attachmentiddict['banking'])
+                               attachment_ids=attachmentiddict['bankfiles']+attachmentiddict['audit_reports'])
         db.session.add(bankquery)
         db.session.commit()
         bankqueryid = bankquery.id
         #
-        skillgrade = ";".join([x + '-' + request.form["raskillset-skillset-" + x] for x in form.skillset.data['skillset']])
+        skillgrade = ";".join([x + '-' + request.form["raskillset-" + x] for x in form.skillset.data])
 
         supplquery = PM_Supplier(skill_grade=skillgrade,
-                                 introduction=form.company.data["introduction"], quality_assurance=form.services.data["quality_assurance"],
-                                 certification=form.services.data["certification"], goods_service=form.services.data["goods_service"],
-                                 goods_list=form.services.data["goods_list"], service_list=form.services.data["service_list"],
+                                 introduction=form.introduction.data, quality_assurance=form.quality_assurance.data,
+                                 certification=form.certification.data, goods_service=form.goods_service.data,
+                                 goods_list=form.goods_list.data, service_list=form.service_list.data,
                                  company_relations_id=corelqueryid, mailing_address_id=mailaddrqueryid,
-                                 bank_id=bankqueryid, attachment_ids=attachmentiddict['company']+attachmentiddict['banking'])
+                                 bank_id=bankqueryid, attachment_ids=attachmentiddict['servicefiles'])
 
         db.session.add(supplquery)
         db.session.commit()
 
         # get skill from skillset query then append supplier's just committed id to supplier's supplkill backref table
-        for i in form.skillset.data['skillset']:
+        for i in form.skillset.data:
             db.session.query(PM_Skillset).filter(PM_Skillset.name==i).first().supplkill.append(supplquery)
 
         db.session.commit()
 
         flash(self.message, 'info')
+        # return redirect(self.route_base + "/form")
+        self.update_redirect()
+        self.get_redirect()
+        redirect(self.route_base)
 
 
 class Add_SkillForm(SimpleFormView):
+    # route_base = '/add_skillform'
     form = Add_Skill
     form_title = 'Add Skills'
     message = 'The form was submitted'
-
-    def form_get(self, form):
-        # form.skill.data = dir(form)
-        True
 
     def form_post(self, form):
         # post process form
@@ -426,22 +444,26 @@ class Add_SkillForm(SimpleFormView):
 
         db.session.commit()
         db.create_all()
-        pdb.set_trace()
 
         flash(self.message, 'info')
+        # return redirect(self.route_base + "/form")
+        self.update_redirect()
+        self.get_redirect()
+        redirect(self.route_base)
 
 
 class New_PM_ProjectForm(SimpleFormView):
+    # route_base = '/new_pm_projectform'
     form = New_PM_Project
     form_title = 'New Project'
     message = 'The form was submitted'
 
     def form_get(self, form):
-        True
+        form.skillset.choices = skill_update()
 
     def form_post(self, form):
         # post process form
-        skillgrade = ";".join([x + '-' + request.form["raskillset-skillset-" + x] for x in form.skillset.data['skillset']])
+        skillgrade = ";".join([x + '-' + request.form["raskillset-" + x] for x in form.skillset.data])
         projquery = PM_Project(skill_grade=skillgrade,
                                 name=form.name.data,
                                 description=form.description.data,
@@ -460,72 +482,36 @@ class New_PM_ProjectForm(SimpleFormView):
         db.session.commit()
 
         # get skill from skillset query then append supplier's just committed id to supplier's projskill backref table
-        for i in form.skillset.data['skillset']:
+        for i in form.skillset.data:
             db.session.query(PM_Skillset).filter(PM_Skillset.name == i).first().projskill.append(projquery)
 
         db.session.commit()
 
         flash(self.message, 'info')
+        # return redirect(self.route_base + "/form")
+        self.update_redirect()
+        self.get_redirect()
+        redirect(self.route_base)
 
 
 # <___ Testing ___>
 
 class Add_SkilltForm(SimpleFormView):
+    # route_base = '/add_skilltform'
     form = Add_Skillt
     form_title = 'Add Skillst'
     message = 'The form was submitted'
 
-    def upload_file(self):
-        # check if the post request has the file part
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        # if user does not select file, browser also
-        # submit a empty part without filename
-        if file.filename == '':
-            flash('No selected file')
-            return redirect(request.url)
-        if file:
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for('uploaded_file',
-                                    filename=filename))
-
-    def form_get(self, form):
-        # flash(form.data, 'info')
-        True
-
     def form_post(self, form):
-        # post process form
-        # for attr in dir(request):
-        #     flash("obj.%s = %r" % (attr, getattr(request, attr)), 'info')
-        # skillgrade = ";".join([request.form["raskillset-" + x] for x in form.skillset.data])
-        #
-        # filenames = []
-        # unique_filenames = []
-        # for i in request.files.getlist('files-file-0'):
-        #     filenames.append(i.filename)
-        #     unique_filenames.append(uuid.uuid4().hex)
-        #     unique_filename = uuid.uuid4().hex
-        #     i.save(self.appbuilder.app.config['UPLOAD_FOLDER'] + unique_filename)
-        #
-        # cntr = 0
-        # for i in filenames:
-        #     attquery = PM_Attachment(table_id='test',
-        #                              table_name=request.form['files-0'],
-        #                              file=i,
-        #                              ufilename=unique_filenames[cntr])
-        #     cntr += 1
-        #
-        #     db.session.add(attquery)
-        # db.session.commit()
+        pdb.set_trace()
+    # def form_post(self, form):
 
-        # Add_Table('pm_attachment', ['com', 'com2'])
-
-        # flash(Add_Table('pm_attachment', ['com', 'com2']), 'info')
-        flash(self.message, 'info')
+        # for attr in dir(self):
+        #     flash("obj.%s = %r" % (attr, getattr(self, attr)), 'info')
+        #
         # pdb.set_trace()
+        # self.update_redirect()
+        # return redirect(self.route_base + "/form")
 
 
 class MyView(BaseView):
@@ -620,23 +606,23 @@ class MyView(BaseView):
 
 db.create_all()
 #form
-appbuilder.add_view(New_PM_CustomerForm, "Customer Registration", icon="fa-group", label=_('Customer Registration'), category="My Forms", category_icon="fa-cogs")
-appbuilder.add_view(New_PM_SupplierForm, "Supplier Registration", icon="fa-group", label=_('Supplier Registration'), category="My Forms", category_icon="fa-cogs")
-appbuilder.add_view(New_PM_ProjectForm, "New Project", icon="fa-group", label=_('New Project'), category="My Forms", category_icon="fa-cogs")
-appbuilder.add_view(Add_SkillForm, "Add Skills", icon="fa-group", label=_('Add Skills'), category="My Forms", category_icon="fa-cogs")
-appbuilder.add_view(Add_SkilltForm, "Add Skillst", icon="fa-group", label=_('Add Skillst'), category="My Forms", category_icon="fa-cogs")
+appbuilder.add_view(New_PM_CustomerForm, "Customer", icon="fa-group", label=_('Customer'), category="Registration", category_icon="fa-cogs")
+appbuilder.add_view(New_PM_SupplierForm, "Supplier", icon="fa-group", label=_('Supplier'), category="Registration", category_icon="fa-cogs")
+appbuilder.add_view(New_PM_ProjectForm, "Project", icon="fa-group", label=_('Project'), category="Registration", category_icon="fa-cogs")
+appbuilder.add_view(Add_SkillForm, "Skill", icon="fa-group", label=_('Skill'), category="Registration", category_icon="fa-cogs")
+appbuilder.add_view(Add_SkilltForm, "Skillst", icon="fa-group", label=_('Skillst'), category="Registration", category_icon="fa-cogs")
 #models
-appbuilder.add_view(GroupModelView, "List Groups", icon="fa-folder-open-o", category="Contacts", category_icon='fa-envelope')
-appbuilder.add_view(UserView, "List Users", icon="fa-folder-open-o", category="Contacts", category_icon='fa-envelope')
-appbuilder.add_view(SupplierView, "List Suppliers", icon="fa-folder-open-o", category="Contacts", category_icon='fa-envelope')
-appbuilder.add_view(CustomerView, "List Customer", icon="fa-folder-open-o", category="Contacts", category_icon='fa-envelope')
-appbuilder.add_view(ProjectView, "List Project", icon="fa-folder-open-o", category="Contacts", category_icon='fa-envelope')
-appbuilder.add_view(RatingView, "List Rating", icon="fa-folder-open-o", category="Contacts", category_icon='fa-envelope')
-appbuilder.add_view(Project_QAView, "List ProjectQA", icon="fa-folder-open-o", category="Contacts", category_icon='fa-envelope')
+appbuilder.add_view(GroupModelView, "List Groups", icon="fa-folder-open-o", category="Administration", category_icon='fa-envelope')
+appbuilder.add_view(UserView, "List Users", icon="fa-folder-open-o", category="Administration", category_icon='fa-envelope')
+appbuilder.add_view(SupplierView, "List Suppliers", icon="fa-folder-open-o", category="Administration", category_icon='fa-envelope')
+appbuilder.add_view(CustomerView, "List Customer", icon="fa-folder-open-o", category="Administration", category_icon='fa-envelope')
+appbuilder.add_view(ProjectView, "List Project", icon="fa-folder-open-o", category="Administration", category_icon='fa-envelope')
+appbuilder.add_view(RatingView, "List Rating", icon="fa-folder-open-o", category="Administration", category_icon='fa-envelope')
+appbuilder.add_view(Project_QAView, "List ProjectQA", icon="fa-folder-open-o", category="Administration", category_icon='fa-envelope')
 
-appbuilder.add_view(PM_SkilltestView, "List PM_SkilltestView", icon="fa-folder-open-o", category="Contacts", category_icon='fa-envelope')
-# appbuilder.add_view(ContactModelView, "List Contacts", icon="fa-envelope", category="Contacts")
-appbuilder.add_separator("Contacts")
+appbuilder.add_view(PM_SkilltestView, "List PM_SkilltestView", icon="fa-folder-open-o", category="Administration", category_icon='fa-envelope')
+# appbuilder.add_view(ContactModelView, "List Contacts", icon="fa-envelope", category="Administration")
+appbuilder.add_separator("Administration")
 
 appbuilder.add_view(MyView(), "Method1", category='My View')
 #appbuilder.add_view(MyView(), "Method2", href='/myview/method2/jonh', category='My View')
