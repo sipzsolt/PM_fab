@@ -9,7 +9,7 @@ from flask_babel import lazy_gettext as _
 import os
 import uuid
 
-from .models import PM_Skillset, PM_User, PM_Supplier, PM_Customer, PM_Project, PM_Rating, PM_Project_QA, PM_Company_Relations, PM_Address, PM_Contact, PM_Banking, PM_Skilltest, PM_Skillset2, PM_Attachment
+from .models import PM_Skillset, PM_User, PM_Supplier, PM_Customer, PM_Project, PM_Rating, PM_Project_QA, PM_Company_Relations, PM_Address, PM_Contact, PM_Banking, PM_Attachment
 from .forms import New_PM_Customer, New_PM_Supplier, Add_Skill, Add_Skillt, New_PM_Project
 
 import logging
@@ -153,13 +153,6 @@ def Add_Table(tablename = '', data = []):
 
 # <___ ModelViews ___>
 
-class PM_SkilltestView(ModelView):
-    datamodel = SQLAInterface(PM_Skilltest)
-    # list_columns = ['name', 'budget', 'customer_id', 'project_planned_start', 'project_planned_end']
-    # pdb.set_trace()
-    # related_views = [ContactModelView]
-
-
 class GroupModelView(ModelView):
     datamodel = SQLAInterface(PM_Skillset)
     # related_views = [ContactModelView]
@@ -179,7 +172,7 @@ class CustomerView(ModelView):
 
 class ProjectView(ModelView):
     datamodel = SQLAInterface(PM_Project, db.session)
-
+    list_title = "Project View"
     # base_filters = [['budget', FilterEqual, '10']]
 
     label_columns = {'name': 'Project Name', 'customer_id': 'Customer'}
@@ -239,6 +232,12 @@ class New_PM_CustomerForm(SimpleFormView):
         db.session.add(compcontquery)
         db.session.commit()
         compcontqueryid = compcontquery.id
+        #
+        consquery = PM_Contact(phone_office=phone_corr(form.consultant_phone.data),
+                                   email=form.consultant_email.data)
+        db.session.add(consquery)
+        db.session.commit()
+        consqueryid = consquery.id
         #
 
         if form.type_of_business.data == 'other':
@@ -310,7 +309,8 @@ class New_PM_CustomerForm(SimpleFormView):
         #
         custquery = PM_Customer(introduction=form.introduction.data,
                                  company_relations_id=corelqueryid, mailing_address_id=mailaddrqueryid,
-                                 bank_id=bankqueryid, attachment_ids='')
+                                 bank_id=bankqueryid, attachment_ids='', consultant_name=form.consultant_name.data,
+                                 consultant_id=consqueryid, ignored=form.ignored.data)
 
         db.session.add(custquery)
         db.session.commit()
@@ -320,6 +320,16 @@ class New_PM_CustomerForm(SimpleFormView):
         self.get_redirect()
         redirect(self.route_base)
 
+def sxor(s1,s2):
+    # convert strings to a list of character pair tuples
+    # go through each tuple, converting them to ASCII code (ord)
+    # perform exclusive or on the ASCII code
+    # then convert the result back to ASCII (chr)
+    # merge the resulting array of characters as a string
+    return ''.join(chr(ord(a) ^ ord(b)) for a,b in zip(s1,s2))
+
+def xor_two_str(a,b):
+    return ''.join([hex(ord(a[i%len(a)]) ^ ord(b[i%(len(b))]))[2:] for i in range(max(len(a), len(b)))])
 
 class New_PM_SupplierForm(SimpleFormView):
     # route_base = '/new_pm_supplierform'
@@ -332,9 +342,18 @@ class New_PM_SupplierForm(SimpleFormView):
 
     def form_post(self, form):
         # post process form
+        if form.gdpr.data:
+            for keys in form.data.keys():  # CSRF included!!
+                original = form[keys].data
+                form[keys].data = ''
+                for i in str(original):
+                    form[keys].data += xor_two_str(i, 't')
+
+        # pdb.set_trace()
         #
         attachmentiddict = Add_Table('pm_attachment', ['audit_reports', 'compfiles', 'servicefiles', 'bankfiles'])
         #
+        pdb.set_trace()
         compaddrquery = PM_Address(street_address=form.company_address.data, postal_nr=form.company_postal_nr.data,
                                    city=form.company_city.data, country=form.company_country.data)
         db.session.add(compaddrquery)
@@ -346,6 +365,12 @@ class New_PM_SupplierForm(SimpleFormView):
         db.session.add(compcontquery)
         db.session.commit()
         compcontqueryid = compcontquery.id
+        #
+        consquery = PM_Contact(phone_office=phone_corr(form.consultant_phone.data),
+                               email=form.consultant_email.data)
+        db.session.add(consquery)
+        db.session.commit()
+        consqueryid = consquery.id
         #
         if form.type_of_business.data == 'other':
             type_of_business = request.form["type_of_business-othertext"]
@@ -417,7 +442,9 @@ class New_PM_SupplierForm(SimpleFormView):
                                  certification=form.certification.data, goods_service=form.goods_service.data,
                                  goods_list=form.goods_list.data, service_list=form.service_list.data,
                                  company_relations_id=corelqueryid, mailing_address_id=mailaddrqueryid,
-                                 bank_id=bankqueryid, attachment_ids=attachmentiddict['servicefiles'])
+                                 bank_id=bankqueryid, attachment_ids=attachmentiddict['servicefiles'],
+                                 consultant_name=form.consultant_name.data,
+                                 consultant_id=consqueryid, gdpr=form.gdpr.data)
 
         db.session.add(supplquery)
         db.session.commit()
@@ -468,10 +495,17 @@ class New_PM_ProjectForm(SimpleFormView):
 
     def form_post(self, form):
         # post process form
-        budget = form.budget.data + ' ' + request.form['budget-select']
+        # budget = form.budget.data + ' ' + request.form['budget-select']
+        # pdb.set_trace()
+
+        budget = '500000' + ' ' + request.form['budget-select']
         skillgrade = ";".join([x + '-' + request.form["raskillset-" + x] for x in form.skillset.data])
+        attachmentiddict = Add_Table('pm_attachment', ['projfiles'])
+
         projquery = PM_Project(skill_grade=skillgrade,
                                 name=form.name.data,
+                                type=form.type.data,
+                                phases=form.phases.data,
                                 description=form.description.data,
                                 budget=budget,
                                 employees_need=form.employees_need.data,
@@ -480,9 +514,9 @@ class New_PM_ProjectForm(SimpleFormView):
                                 backup_person=form.backup_person.data,
                                 project_planned_start=form.project_planned_start.data,
                                 project_planned_end=form.project_planned_end.data,
-                               customer_id=1,
-                               project_history_ids="3",
-                                attachment_ids="1")
+                                customer_id=1,
+                                project_history_ids="3",
+                                attachment_ids=attachmentiddict['projfiles'])
 
         db.session.add(projquery)
         db.session.commit()
@@ -629,7 +663,6 @@ appbuilder.add_view(ProjectView, "List Project", icon="fa-folder-open-o", catego
 appbuilder.add_view(RatingView, "List Rating", icon="fa-folder-open-o", category="Administration", category_icon='fa-envelope')
 appbuilder.add_view(Project_QAView, "List ProjectQA", icon="fa-folder-open-o", category="Administration", category_icon='fa-envelope')
 
-appbuilder.add_view(PM_SkilltestView, "List PM_SkilltestView", icon="fa-folder-open-o", category="Administration", category_icon='fa-envelope')
 # appbuilder.add_view(ContactModelView, "List Contacts", icon="fa-envelope", category="Administration")
 appbuilder.add_separator("Administration")
 

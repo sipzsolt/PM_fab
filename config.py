@@ -124,5 +124,5 @@ MAIL_USE_SSL=False
 MAIL_SERVER = 'smtp.gmail.com'
 MAIL_USE_TLS = True
 MAIL_USERNAME = 'garzooka2devil2@gmail.com'
-MAIL_PASSWORD = 'SaS+Devil22'
+MAIL_PASSWORD = ''
 MAIL_DEFAULT_SENDER = 'garzooka2devil2@gmail.com'

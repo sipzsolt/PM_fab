@@ -16,36 +16,11 @@
 
     <script>
 
-//        function check(id) {
-//            var element = document.getElementById(id);
-//            var radio = document.getElementById("ra"+id);
-//            if(element.checked){
-//                    radio.style.display = "block";
-//            }else{
-//                    radio.style.display = "none";
-//            }
-//        }
-
-
-//        function checkRadio(id, field_id) {
-//            var element = document.getElementById(id);
-//            var radiotext = document.getElementById(field_id+"-othertext");
-//            if(element.checked && id === field_id+"-other"){
-//                    radiotext.style.display = "block";
-//            }else{
-//                    radiotext.style.display = "none";
-//            }
-//        }
-
-//                '<input type="text" name="mytext[]"/><a href="#" class="delete">Delete</a>' +
-
-//        $('.add_form_field').click(
         function addFormField(fname, cntr) {
             var plusbtn = document.getElementById(fname +'-btn-'+ cntr);
             plusbtn.style.display = "none";
             cntr = parseInt(cntr) + 1;
             var wrapper = $("."+fname+"container");
-//            e.preventDefault();
             $(wrapper).append('<div>' +
                 '<input type="text" name="'+ fname +'-'+ cntr +'" class="form-control">' +
                 '<button type="button" class="btn btn-default btn-sm add_form_field" id="'+ fname +'-btn-'+ cntr +'" style="float: right;" onclick=addFormField("'+fname+'",'+ cntr +')>' +
@@ -70,45 +45,104 @@
             }
         }
 
+        //Wait till page loaded
         document.addEventListener("DOMContentLoaded", function(event) {
+            //Check if there are validator error
+            const validerrors = document.querySelectorAll(".alert-danger");
 
+            //Change textarea height to 5 row and add class
             const textareas = document.querySelectorAll("textarea");
-            textareas[0].rows = 5;
-            textareas.forEach((area) => {
-                area.className = "form-control";
-            })
+            if(textareas.length > 0) {
+                    textareas[0].rows = 5;
+                    textareas.forEach((area) => {
+                        area.className = "form-control";
+                    })
+            }
 
-
+            //Change star (*) symbols' colors
             const stars = document.querySelectorAll("strong");
-            stars.forEach((star) => {
-                if(star.outerText == "*"){
-                    star.style.color = "#008cba"
-                }
-            })
+            if(stars.length > 0) {
+                stars.forEach((star) => {
+                    if(star.outerText == "*")
+                    {
+                        star.style.color = "#008cba"
+                    }
+                })
+            }
 
-            const chk_othertext = (fname, ro, ot) => {
-                if(ro.checked && ot.value === ""){
-                    ot.value = sessionStorage[fname+'text'];
+            //Remember Type/Nature of business "Other" text on validate error
+            const chk_othertext = (ro, ot) => {
+//                if(ro.checked && ot.value === ""){
+                if(validerrors.length > 0){
+                    ot.value = sessionStorage[ot.id];
                 }else{
-                    sessionStorage.removeItem(fname+'text')
+                    sessionStorage.removeItem(ot.id)
                 }
             }
 
-            const tob_name = 'type_of_business-other';
-            const nob_name = 'nature_of_business-other';
-            const tob_ot = document.querySelector('#type_of_business-othertext');
-            const tob_ro = document.querySelector('#type_of_business-other');
-            tob_ot.addEventListener('change', (e) => ot_chg(e))
-            const nob_ot = document.querySelector('#nature_of_business-othertext');
-            const nob_ro = document.querySelector('#nature_of_business-other');
-            nob_ot.addEventListener('change', (e) => ot_chg(e))
-
-
             const ot_chg = (e) => sessionStorage.setItem(e.target.id, e.target.value)
 
-            chk_othertext(tob_name, tob_ro, tob_ot)
-            chk_othertext(nob_name, nob_ro, nob_ot)
-          //do work
+            const tob_ot = document.querySelector('#type_of_business-othertext');
+            const tob_ro = document.querySelector('#type_of_business-other');
+            (tob_ot != null) ? tob_ot.addEventListener('change', (e) => ot_chg(e)) : '';
+            const nob_ot = document.querySelector('#nature_of_business-othertext');
+            const nob_ro = document.querySelector('#nature_of_business-other');
+            (nob_ot != null) ? nob_ot.addEventListener('change', (e) => ot_chg(e)) : '';
+
+
+            (tob_ot != null) ? chk_othertext(tob_ro, tob_ot) : '';
+            (nob_ot != null) ? chk_othertext(nob_ro, nob_ot) : '';
+
+            //Remember checkbox and skillfield button state
+            const skillboxbtn = document.querySelector('[aria-controls="skillbox"]');
+            const radioins = document.querySelectorAll('[name^="raskillset-"]');
+            (radioins != null) ? radioins.forEach( radiobtn => radiobtn,addEventListener('change', (e) => ))
+            radioob = {};
+
+            (radioins != null) ? radioins.forEach(radiocont => {
+                radiocont.childNodes.forEach(radiobtn => (radiobtn.childNodes[0].checked) ? chked_radio ={[radiocont.id]: radiobtn.childNodes[0].id} : '';)
+                radioob = {...radioob, ...chked_radio}
+            })
+            :
+            '';
+
+            //slider (copied)
+
+            var slider = document.getElementById("myRange");
+            var output = document.getElementById("demo");
+            output.innerHTML = slider.value; // Display the default slider value
+
+            // Update the current slider value (each time you drag the slider handle)
+            slider.oninput = function() {
+                output.innerHTML = this.value;
+            }
+
+            //slider2 (copied)
+
+//            $('#range').on("input", function() {
+//            $('.output').val(this.value +",000  $" );
+//            }).trigger("change");
+
+            //slider3
+//            var rangeSlider = function(){
+//              var slider = $('.range-slider'),
+//                  range = $('.range-slider__range'),
+//                  value = $('.range-slider__value');
+//
+//              slider.each(function(){
+//
+//                value.each(function(){
+//                  var value = $(this).prev().attr('value');
+//                  $(this).html(value);
+//                });
+//
+//                range.on('input', function(){
+//                  $(this).next(value).html(this.value);
+//                });
+//              });
+//            };
+//
+//            rangeSlider();
         });
 //        const multiplyES6 = (x, y) => { return x * y };
 //        console.log(multiplyES6(5,6));
@@ -123,6 +157,8 @@
 //                alert("asd")
 //            }
 //        }
+
+
     </script>
     <style>
         .inputfile{
@@ -132,6 +168,148 @@
             list-style-type: none;
             padding-left: 0px;
         }
+
+
+        /* The slider itself */
+        .slider {
+            -webkit-appearance: none;  /* Override default CSS styles */
+            appearance: none;
+            width: 100%; /* Full-width */
+            height: 25px; /* Specified height */
+            background: #d3d3d3; /* Grey background */
+            outline: none; /* Remove outline */
+            opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+            -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+            transition: opacity .2s;
+            margin-top: 6px;
+            margin-left: 10px;
+        }
+
+        /* Mouse-over effects */
+        .slider:hover {
+            opacity: 1; /* Fully shown on mouse-over */
+        }
+
+        /* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none; /* Override default look */
+            appearance: none;
+            width: 25px; /* Set a specific slider handle width */
+            height: 25px; /* Slider handle height */
+            background: #4CAF50; /* Green background */
+            cursor: pointer; /* Cursor on hover */
+        }
+
+        .slider::-moz-range-thumb {
+            width: 25px; /* Set a specific slider handle width */
+            height: 25px; /* Slider handle height */
+            background: #4CAF50; /* Green background */
+            cursor: pointer; /* Cursor on hover */
+        }
+
+
+        /*slider3*/
+        /**, *:before, *:after {*/
+          /*box-sizing: border-box;*/
+        /*}*/
+
+        /*body {*/
+          /*font-family: sans-serif;*/
+          /*padding: 60px 20px;*/
+        /*}*/
+        /*@media (min-width: 600px) {*/
+          /*body {*/
+            /*padding: 60px;*/
+          /*}*/
+        /*}*/
+
+        /*.range-slider {*/
+          /*margin: 60px 0 0 0%;*/
+        /*}*/
+
+        /*.range-slider {*/
+          /*width: 100%;*/
+        /*}*/
+
+        /*.range-slider__range {*/
+          /*-webkit-appearance: none;*/
+          /*width: calc(100% - (73px));*/
+          /*height: 10px;*/
+          /*border-radius: 5px;*/
+          /*background: #d7dcdf;*/
+          /*outline: none;*/
+          /*padding: 0;*/
+          /*margin: 0;*/
+        /*}*/
+        /*.range-slider__range::-webkit-slider-thumb {*/
+          /*-webkit-appearance: none;*/
+                  /*appearance: none;*/
+          /*width: 20px;*/
+          /*height: 20px;*/
+          /*border-radius: 50%;*/
+          /*background: #2c3e50;*/
+          /*cursor: pointer;*/
+          /*transition: background .15s ease-in-out;*/
+        /*}*/
+        /*.range-slider__range::-webkit-slider-thumb:hover {*/
+          /*background: #1abc9c;*/
+        /*}*/
+        /*.range-slider__range:active::-webkit-slider-thumb {*/
+          /*background: #1abc9c;*/
+        /*}*/
+        /*.range-slider__range::-moz-range-thumb {*/
+          /*width: 20px;*/
+          /*height: 20px;*/
+          /*border: 0;*/
+          /*border-radius: 50%;*/
+          /*background: #2c3e50;*/
+          /*cursor: pointer;*/
+          /*transition: background .15s ease-in-out;*/
+        /*}*/
+        /*.range-slider__range::-moz-range-thumb:hover {*/
+          /*background: #1abc9c;*/
+        /*}*/
+        /*.range-slider__range:active::-moz-range-thumb {*/
+          /*background: #1abc9c;*/
+        /*}*/
+        /*.range-slider__range:focus::-webkit-slider-thumb {*/
+          /*box-shadow: 0 0 0 3px #fff, 0 0 0 6px #1abc9c;*/
+        /*}*/
+
+        /*.range-slider__value {*/
+          /*display: inline-block;*/
+          /*position: relative;*/
+          /*width: 60px;*/
+          /*color: #fff;*/
+          /*line-height: 20px;*/
+          /*text-align: center;*/
+          /*border-radius: 3px;*/
+          /*background: #2c3e50;*/
+          /*padding: 5px 10px;*/
+          /*margin-left: 8px;*/
+        /*}*/
+        /*.range-slider__value:after {*/
+          /*position: absolute;*/
+          /*top: 8px;*/
+          /*left: -7px;*/
+          /*width: 0;*/
+          /*height: 0;*/
+          /*border-top: 7px solid transparent;*/
+          /*border-right: 7px solid #2c3e50;*/
+          /*border-bottom: 7px solid transparent;*/
+          /*content: '';*/
+        /*}*/
+
+        /*::-moz-range-track {*/
+          /*background: #d7dcdf;*/
+          /*border: 0;*/
+        /*}*/
+
+        /*input::-moz-focus-inner,*/
+        /*input::-moz-focus-outer {*/
+          /*border: 0;*/
+        /*}*/
+
     </style>
 {% endblock %}
 

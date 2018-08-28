@@ -1,6 +1,4 @@
-# from flask.ext.appbuilder import Model
-# from flask.ext.appbuilder.models.mixins import AuditMixin, FileColumn, ImageColumn
-from sqlalchemy import Column, Integer, String, ForeignKey, Date
+from sqlalchemy import Column, Integer, String, ForeignKey, Date, Text, Boolean
 from sqlalchemy.orm import relationship
 from flask_appbuilder import Model
 from app import db
@@ -53,7 +51,7 @@ class PM_Supplier(Model):
 
     id = Column(Integer, primary_key=True)
     skillset = relationship('PM_Skillset', secondary=supplkills, backref=db.backref('supplkill', lazy='dynamic'))
-    skill_grade =  Column(String(500))
+    skill_grade = Column(String(500))
     introduction = Column(String(1000))
 
     quality_assurance = Column(String(150))
@@ -62,8 +60,13 @@ class PM_Supplier(Model):
     goods_list = Column(String(150))
     service_list = Column(String(150))
 
+    consultant_name = Column(String(200))
+    gdpr = Column(Boolean(False))
     attachment_ids = Column(String(500))
+    project_ids = Column(String(500))
 
+    consultant_id = Column(Integer, ForeignKey('pm_contact.id'))
+    consultant = relationship("PM_Contact", foreign_keys=[consultant_id])
 
     company_relations_id = Column(Integer, ForeignKey('pm_company_relations.id'))
     company_relations = relationship("PM_Company_Relations", foreign_keys = [company_relations_id])
@@ -85,8 +88,12 @@ class PM_Customer(Model):
 
     id = Column(Integer, primary_key=True)
     introduction = Column(String(1000))
+    ignored = Column(String(1000))
+    consultant_name = Column(String(200))
     attachment_ids = Column(String(500))
 
+    consultant_id = Column(Integer, ForeignKey('pm_contact.id'))
+    consultant = relationship("PM_Contact", foreign_keys=[consultant_id])
 
     mailing_address_id = Column(Integer, ForeignKey('pm_address.id'))
     mailing_address = relationship("PM_Address", foreign_keys = [mailing_address_id])
@@ -119,6 +126,8 @@ class PM_Project(Model):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(150), nullable=False)
+    type = Column(String(150), nullable=False)
+    phases = Column(String(1500), nullable=False)
     description = Column(String(1500))
     skillset = relationship('PM_Skillset', secondary=projskills, backref=db.backref('projskill', lazy='dynamic'))
     skill_grade = Column(String(500))
@@ -284,26 +293,4 @@ class PM_Company_Relations(Model):
         return self.company_name
 
 
-skills = db.Table('skills', Model.metadata,
-    db.Column('pm_skillset2_id', Integer, ForeignKey('pm_skillset2.id')),
-    db.Column('pm_skilltest_id', Integer, ForeignKey('pm_skilltest.id'))
-)
-
-
-class PM_Skillset2(Model):
-    __tablename__ = 'pm_skillset2'
-
-    id = Column(Integer, primary_key=True)
-    name =  Column(String(150), unique = True, nullable=False)
-
-    # skills = relationship("PM_Skilltest", backref="pm_skillset2")
-
-    def __repr__(self):
-        return self.name
-
-
-class PM_Skilltest(Model):
-    __tablename__ = 'pm_skilltest'
-
-    id = Column(Integer, primary_key=True)
-    skillset = relationship('PM_Skillset2', secondary=skills, backref=db.backref('skill', lazy='dynamic'))
+db.create_all()

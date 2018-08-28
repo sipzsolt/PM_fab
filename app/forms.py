@@ -1084,17 +1084,13 @@ def select_multi_checkbox(field, ul_class='', **kwargs):
     field_id = kwargs.pop('id', field.id)
 
 
-    # html = [u'<input %s>' % widgets.html_params(id="skill_btn", type="button")]
-    # html.append(u'<div class="checkbox" style="display: none">')
 
     html = [u'<a class="btn btn-primary collapsed" data-toggle="collapse" href="#skillbox" role="button" aria-expanded="false" aria-controls="skillbox">Show Skillset</a>']
     html.append(u'<div class="checkbox collapse" id="skillbox">')
-    # html = [u'<div class="checkbox">']
     html.append(u'<ul %s>' % widgets.html_params(id=field_id, class_=ul_class, style="padding-left:20px;"))
     for value, label, checked in field.iter_choices():
         choice_id = u'%s-%s' % (field_id, value)
         options = dict(kwargs, name=field.name, value=value, id=choice_id, onchange='check("'+choice_id+'")')
-        # radiooptions = dict(kwargs, id="ra"+choice_id, style="display: none")
         radiooptions = dict(kwargs, id="ra"+choice_id)
         if checked:
             options['checked'] = 'checked'
@@ -1104,15 +1100,15 @@ def select_multi_checkbox(field, ul_class='', **kwargs):
         html.append(u'<div %s>' % widgets.html_params(**radiooptions))
 
         html.append(u'<label class="radio-inline">')
-        html.append(u'<input type="radio" name="%s" id="low" value="low" checked>low' % ("ra"+choice_id))
+        html.append(u'<input type="radio" name="%s" id="low" value="low">low' % ("ra"+choice_id))
         html.append(u'</label>')
 
         html.append(u'<label class="radio-inline">')
-        html.append(u'<input type="radio" name="%s" id="medium" value="medium" checked>medium' % ("ra"+choice_id))
+        html.append(u'<input type="radio" name="%s" id="medium" value="medium">medium' % ("ra"+choice_id))
         html.append(u'</label>')
 
         html.append(u'<label class="radio-inline">')
-        html.append(u'<input type="radio" name="%s" id="high" value="high" checked>high' % ("ra"+choice_id))
+        html.append(u'<input type="radio" name="%s" id="high" value="high">high' % ("ra"+choice_id))
         html.append(u'</label>')
 
 
@@ -1151,20 +1147,16 @@ def radio_with_text(field, ul_class='', **kwargs):
     kwargs.setdefault('type', 'radio')
     field_id = kwargs.pop('id', field.id)
 
-    # html = [u'<ul %s>' % widgets.html_params(id=field_id, class_=ul_class, style="list-style-type: none;")]
     html = [u'<ul %s>' % widgets.html_params(id=field_id, class_=ul_class)]
     for value, label, checked in field.iter_choices():
         choice_id = u'%s-%s' % (field_id, value)
         options = dict(kwargs, name=field.name, value=value, id=choice_id)
-        # options = dict(kwargs, name=field.name, value=value, id=choice_id, onchange='checkRadio("'+choice_id+'", "'+field.name+'")')
-        # radiooptions = dict(kwargs, id="ra"+choice_id, style="display: none")
         radiooptions = dict(kwargs, id="ra"+choice_id)
         if checked:
             options['checked'] = 'checked'
         html.append(u'<li><input %s/> ' % widgets.html_params(**options))
         html.append(u'<label for="%s">%s</label></li>' % (field_id, label))
 
-    # html.append(u'<input type="text" id="%s" name="%s" style="display: none"/>'  % (field.name+"-othertext", field.name+"-othertext"))
     html.append(u'<input type="text" id="%s" name="%s" class="form-control"/>'  % (field.name+"-othertext", field.name+"-othertext"))
     html.append(u'</ul>')
 
@@ -1186,15 +1178,70 @@ def text_with_select(field, ul_class='', **kwargs):
     html.append(u'<div %s>' % widgets.html_params(class_='col-sm-3'))
 
     html.append(u'<select %s>' % widgets.html_params(id=field.name + "-select", name=field.name + "-select", class_='form-control'))
-    # for value, label, checked in field.iter_choices():
     for value in currchoices:
-        # choice_id = u'%s-%s' % (field_id, value)
-        # options = dict(kwargs, name=field.name, value=value, id=choice_id)
         html.append(u'<option %s/>%s</option>' % (widgets.html_params(value=value), value))
     html.append(u'</select>')
 
     html.append(u'</div>')
     html.append(u'<div class="form-control"></div>')
+
+    return u''.join(html)
+
+
+def range_with_select(field, ul_class='', **kwargs):
+    currchoices = [str(currencies[x]['code']) for x in currencies.keys()]
+
+    kwargs.setdefault('type', 'option')
+    field_id = kwargs.pop('id', field.id)
+
+    html = [u'<div %s>' % widgets.html_params(class_='col-sm-9', style="padding-left:0px;")]
+
+    html.append(u'<input type="range" min="0" max="1000000" value="500000" step="10000" class="slider" id="myRange">')
+
+    html.append(u'</div>')
+
+    html.append(u'<div %s>' % widgets.html_params(class_='col-sm-3'))
+
+    html.append(u'<select %s>' % widgets.html_params(id=field.name + "-select", name=field.name + "-select", class_='form-control'))
+    for value in currchoices:
+        html.append(u'<option %s/>%s</option>' % (widgets.html_params(value=value), value))
+    html.append(u'</select>')
+
+    html.append(u'</div>')
+    # html.append(u'<div class="form-control"></div>')
+
+    return u''.join(html)
+
+
+def range_with_select2(field, ul_class='', **kwargs):
+    currchoices = [str(currencies[x]['code']) for x in currencies.keys()]
+
+    kwargs.setdefault('type', 'option')
+    field_id = kwargs.pop('id', field.id)
+
+    html = [u'<div %s>' % widgets.html_params(class_='col-sm-9', style="padding-left:0px;")]
+
+    #html.append(u'<div class="range-slider">')
+
+    #html.append(u'<label for="range">')
+    html.append(u'<input class="range-slider__range" type="range" name="range" id="range" min="0" max="1000000" step="10000" value="500000"/>')
+    html.append(u'<span class="range-slider__value">0</span>')
+    #html.append(u'</label>')
+    html.append(u'<output for="range" class="output"></output>')
+
+    #html.append(u'</div>')
+
+    html.append(u'</div>')
+
+    html.append(u'<div %s>' % widgets.html_params(class_='col-sm-3'))
+
+    html.append(u'<select %s>' % widgets.html_params(id=field.name + "-select", name=field.name + "-select", class_='form-control'))
+    for value in currchoices:
+        html.append(u'<option %s/>%s</option>' % (widgets.html_params(value=value), value))
+    html.append(u'</select>')
+
+    html.append(u'</div>')
+    # html.append(u'<div class="form-control"></div>')
 
     return u''.join(html)
 
@@ -1251,6 +1298,10 @@ class New_PM_Customer(DynamicForm):
     working_languages = MultiCheckboxField('Working Languages', choices=[("en", "en"), ("ge", "ge"), ("hu", "hu"), ("fr", "fr")], validators=[DataRequired()])
     compfiles = FileField(u'Company Attachments', widget=files_with_text)
 
+    consultant_name = StringField('Consultant Name', widget=BS3TextFieldWidget())
+    consultant_email = StringField('Consultant Email', validators=[DataRequired(), Email(message=emailmessage)], widget=BS3TextFieldWidget())
+    consultant_phone = StringField('Consultant Phone', widget=BS3TextFieldWidget())
+
     mailing_address = StringField('Mailing Street Address', validators=[DataRequired()], widget=BS3TextFieldWidget())
     mailing_postal_nr = StringField('Mailing Postal Code', validators=[DataRequired()], widget=BS3TextFieldWidget())
     mailing_city = StringField('Mailing City', validators=[DataRequired()], widget=BS3TextFieldWidget())
@@ -1275,9 +1326,12 @@ class New_PM_Customer(DynamicForm):
     bankruptcy_legal_action = RadioField('Do you have outstanding bankruptcy, judgment or pending legal action that could impair operating as a going concern?', choices=[("yes", "Yes"), ("no", "No")], validators=[DataRequired()])
     bankfiles = FileField(u'Banking Attachments', widget=files_with_text)
 
+    ignored = TextAreaField('Ignored Suppliers')
+
 
 class New_PM_Supplier(DynamicForm):
     skilldb = db.session.query(PM_Skillset).all()
+
     skillchoices = [(x, str(x).capitalize()) for x in skilldb]
 
     skillset = MultiCheckboxFieldWithRate('Skillset', choices=skillchoices, validators=[DataRequired()],
@@ -1306,16 +1360,20 @@ class New_PM_Supplier(DynamicForm):
     working_languages = MultiCheckboxField('Working Languages', choices=[("en", "en"), ("ge", "ge"), ("hu", "hu"), ("fr", "fr")], validators=[DataRequired()])
     compfiles = FileField(u'Company Attachments', widget=files_with_text)
 
+    consultant_name = StringField('Consultant Name', widget=BS3TextFieldWidget())
+    consultant_email = StringField('Consultant Email', validators=[DataRequired(),Email(message=emailmessage)], widget=BS3TextFieldWidget())
+    consultant_phone = StringField('Consultant Phone', widget=BS3TextFieldWidget())
+
+    project_ids = StringField('Project References', widget=BS3TextFieldWidget())
+
     mailing_address = StringField('Mailing Street Address', validators=[DataRequired()], widget=BS3TextFieldWidget())
     mailing_postal_nr = StringField('Mailing Postal Code', validators=[DataRequired()], widget=BS3TextFieldWidget())
     mailing_city = StringField('Mailing City', validators=[DataRequired()], widget=BS3TextFieldWidget())
     mailing_country = StringField('Mailing Country', validators=[DataRequired()], widget=BS3TextFieldWidget())
 
-    quality_assurance = StringField('Quality Assurance Certification (e.g. ISO 9000 or Equivalent)',
-                                    validators=[DataRequired()], widget=BS3TextFieldWidget())
+    quality_assurance = StringField('Quality Assurance Certification (e.g. ISO 9000 or Equivalent)',validators=[DataRequired()], widget=BS3TextFieldWidget())
     certification = StringField('Certification(s)', validators=[DataRequired()], widget=BS3TextFieldWidget())
-    goods_service = StringField('Goods / Services Offered', validators=[DataRequired()],
-                                widget=BS3TextFieldWidget())  # http://www.unhcr.org/479a04502.pdf Sec 3
+    goods_service = StringField('Goods / Services Offered', validators=[DataRequired()], widget=BS3TextFieldWidget())  # http://www.unhcr.org/479a04502.pdf Sec 3
     goods_list = StringField('Core Goods Offered', validators=[DataRequired()], widget=BS3TextFieldWidget())
     service_list = StringField('Core Services Offered', validators=[DataRequired()], widget=BS3TextFieldWidget())
     servicefiles = FileField(u'Services Attachments', widget=files_with_text)
@@ -1339,9 +1397,12 @@ class New_PM_Supplier(DynamicForm):
     bankruptcy_legal_action = RadioField('Do you have outstanding bankruptcy, judgment or pending legal action that could impair operating as a going concern?', choices=[("yes", "Yes"), ("no", "No")], validators=[DataRequired()])
     bankfiles = FileField(u'Banking Attachments', widget=files_with_text)
 
+    gdpr = BooleanField(u'Activate GDPR protocol', false_values=[('yes', '')])
+
 
 def unique(form, field):
     skilldb = db.session.query(PM_Skillset).all()
+
     skills = [str(x) for x in skilldb]
     if field.data.lower() in skills:
         raise ValidationError('"{0}" is already in the database'.format(field.data.lower()))
@@ -1360,15 +1421,17 @@ def chk_budget_format(form, field):
 
 class New_PM_Project(DynamicForm):
     name = StringField('Project Name', validators=[DataRequired()], widget=BS3TextFieldWidget())
+    type = StringField('Project Type', widget=BS3TextFieldWidget())
     description = TextAreaField('Project Description', validators=[DataRequired()])
+    phases = TextAreaField('Project Planned Phases', validators=[DataRequired()])
 
     skilldb = db.session.query(PM_Skillset).all()
+
     skillchoices = [(x, str(x).capitalize()) for x in skilldb]
 
-    skillset = MultiCheckboxFieldWithRate('Skillset', choices=skillchoices, validators=[DataRequired()],
-                                          widget=select_multi_checkbox)
+    skillset = MultiCheckboxFieldWithRate('Skillset', choices=skillchoices, validators=[DataRequired()], widget=select_multi_checkbox)
 
-    budget = StringField("Budget",validators=[DataRequired(), chk_budget_format], widget=text_with_select)
+    budget = StringField("Budget", widget=range_with_select)
     # budget = StringField('Project Budget', validators=[DataRequired()], widget=BS3TextFieldWidget())
     employees_need = IntegerField('Employees needed', validators=[DataRequired()], widget=BS3TextFieldWidget())
     person_days = IntegerField('Planned Person Days', validators=[DataRequired()], widget=BS3TextFieldWidget())
@@ -1376,6 +1439,7 @@ class New_PM_Project(DynamicForm):
     backup_person = StringField('Backup Person', validators=[DataRequired()], widget=BS3TextFieldWidget())
     project_planned_start = DateField('Project Planned Start', validators=[DataRequired(), chk_date_today], widget=DatePickerWidget())
     project_planned_end = DateField('Project Planned End', validators=[DataRequired(), chk_date_today], widget=DatePickerWidget())
+    projfiles = FileField(u'Project Attachments', widget=files_with_text)
 
 
     def validate(self):
@@ -1424,6 +1488,7 @@ class CustomField(RadioField):
 
 class Add_Skillt(DynamicForm):
     # skilldb = db.session.query(PM_Skillset).all()
+
     # skillchoices = [(x, str(x).capitalize()) for x in skilldb]
     #
     # skillset = MultiCheckboxFieldWithRate(choices= skillchoices, widget=select_multi_checkbox)
